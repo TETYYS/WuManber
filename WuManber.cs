@@ -159,6 +159,60 @@ namespace WuManberNet
 			m_bInitialized = true;
 		}
 
+		public WordMatch? SearchFirst(ReadOnlySpan<char> text)
+		{
+			var ix = m - 1; // start off by matching end of largest common pattern
+			var length = text.Length;
+			while (ix < length) {
+				int hash1;
+				hash1 = m_lu[text[ix - 2]].Offset;
+				hash1 <<= m_nBitsInShift;
+				hash1 += m_lu[text[ix - 1]].Offset;
+				hash1 <<= m_nBitsInShift;
+				hash1 += m_lu[text[ix]].Offset;
+				var shift = m_ShiftTable[hash1];
+				if (shift > 0) {
+					ix += shift;
+				} else {
+					// we have a potential match when shift is 0
+					int hash2;  // check for matching prefixes
+					hash2 = m_lu[text[ix - m + 1]].Offset;
+					hash2 <<= m_nBitsInShift;
+					hash2 += m_lu[text[ix - m + 2]].Offset;
+					List<PatternMap> element = m_vPatternMap[hash1];
+					for (var iter = 0;iter < element.Count;iter++) {
+						if (hash2 == element[iter].PrefixHash) {
+							// since prefix matches, compare target substring with pattern
+							var ixTarget = text[(ix - m + 3)..]; // we know first two characters already match
+							var ixPattern = _patterns[element[iter].Index].Word[2..];  // ditto
+							var target = 0;
+							var targetLength = ixTarget.Length;
+							var pattern = 0;
+							var patternLength = ixPattern.Length;
+							while (target < targetLength && pattern < patternLength) {
+								// match until we reach end of either string
+								if (m_lu[ixTarget[target]].Letter == m_lu[ixPattern[pattern]].Letter) {
+									// match against chosen case sensitivity
+									++target;
+									++pattern;
+								} else {
+									break;
+								}
+							}
+							if (pattern == patternLength) {
+								// we found the end of the pattern, so match found
+								var match = _patterns[element[iter].Index];
+								return new WordMatch { Index = ix, Word = match.Word, Id = match.Id, Tag = match.Tag };
+							}
+						}
+					}
+					++ix;
+				}
+			}
+
+			return null;
+		}
+
 		public IEnumerable<WordMatch> Search(string text)
 		{
 			if (m_bInitialized)
