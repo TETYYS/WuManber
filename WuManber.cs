@@ -128,7 +128,7 @@ namespace WuManberNet
 				m_ShiftTable[i] = m - B + 1; // default to m-B+1 for shift
 			}
 
-			m_vPatternMap = new Dictionary<int, List<PatternMap>>(m_nTableSize);
+			m_vPatternMap = new Dictionary<int, List<PatternMap>>();
 
 			for (var j = 0; j < k; ++j)
 			{
@@ -156,6 +156,9 @@ namespace WuManberNet
 					}
 				}
 			}
+
+			m_vPatternMap.TrimExcess();
+
 			m_bInitialized = true;
 		}
 
