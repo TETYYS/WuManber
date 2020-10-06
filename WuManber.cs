@@ -205,7 +205,7 @@ namespace WuManberNet
 							if (pattern == patternLength) {
 								// we found the end of the pattern, so match found
 								var match = _patterns[element[iter].Index];
-								return new WordMatch { Index = ix, Word = match.Word, Id = match.Id, Tag = match.Tag };
+								return new WordMatch { Index = ix - m + 1, Word = match.Word, Id = match.Id, Tag = match.Tag };
 							}
 						}
 					}
